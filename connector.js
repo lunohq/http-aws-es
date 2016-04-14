@@ -60,6 +60,13 @@ var HttpAmazonESConnector = function (_HttpConnector) {
     return _this;
   }
 
+  /**
+   * Resolve the credentails provided to amazonES.
+   *
+   * @return {Promise} promise that resolves with an AWS.Credential subclass
+   */
+
+
   _createClass(HttpAmazonESConnector, [{
     key: '_resolveCredentials',
     value: function _resolveCredentials() {
@@ -86,25 +93,28 @@ var HttpAmazonESConnector = function (_HttpConnector) {
         }
       });
     }
+
+    /**
+     * Get the existing credentials. This will handle refreshing the credentials if needed.
+     *
+     * @param {Object} credentials subclass of AWS.Credentials
+     * @return {Promise} promise that resolves with the refreshed credentials
+     */
+
   }, {
-    key: '_refreshCredentials',
-    value: function _refreshCredentials(credentials) {
+    key: '_getCredentials',
+    value: function _getCredentials(credentials) {
       var _this3 = this;
 
       return new Promise(function (resolve, reject) {
-        if (credentials.needsRefresh()) {
-          _this3.log.warning('refreshing credentials:', credentials.constructor.name);
-          credentials.refresh(function (err) {
-            if (err) {
-              _this3.log.error('failed to refresh credentials:', err);
-              reject(err);
-            } else {
-              resolve(credentials);
-            }
-          });
-        } else {
-          resolve(credentials);
-        }
+        credentials.get(function (err) {
+          if (err) {
+            _this3.log.error('failed to get credentials:', err);
+            reject(err);
+          } else {
+            resolve(credentials);
+          }
+        });
       });
     }
   }, {
@@ -113,7 +123,7 @@ var HttpAmazonESConnector = function (_HttpConnector) {
       var _this4 = this;
 
       this._resolveCredentials().then(function (credentials) {
-        return _this4._refreshCredentials(credentials);
+        return _this4._getCredentials(credentials);
       }).then(function (credentials) {
         return _this4._request(credentials, params, cb);
       }).catch(function (err) {
